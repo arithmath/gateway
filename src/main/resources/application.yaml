@@ -1,0 +1,49 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        # -----------------------------------------------------
+        # http://localhost:8080/tool1/hoge/fuga/...のリクエストを
+        # http://localhost:9001/hoge/fuga/...に流す
+        # -----------------------------------------------------
+        - id: tool1
+          # プロキシ先
+          uri: http://localhost:9001
+          # ルーティング
+          predicates:
+            - Path=/tool1/**
+          # フィルタ(パスの書き換えや独自処理を挟み込む)
+          filters:
+            - MyAuthFilter  # 自作認証フィルタ
+            - StripPrefix=1 # パスの先頭部分を切り取る。今回の場合"/tool1"を取り除く
+        # -----------------------------------------------------
+        # http://localhost:8080/tool2/hoge/fuga/...のリクエストを
+        # http://localhost:9002/hoge/fuga/...に流す
+        # -----------------------------------------------------
+        - id: tool2
+          # プロキシ先
+          uri: http://localhost:9002
+          # ルーティング
+          predicates:
+            - Path=/tool2/**
+          # フィルタ(パスの書き換えや独自処理を挟み込む)
+          filters:
+            - MyAuthFilter  # 自作認証フィルタ
+            - StripPrefix=1 # パスの先頭部分を切り取る。今回の場合"/tool2"を取り除く
+      actuator:
+        verbose:
+          enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway
+  endpoint:
+    gateway:
+      enabled: true
+  server:
+    port: 9001
